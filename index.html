@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>準備就緒 - 多風格倒數計時器 v19.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Inter:wght@300;600&family=Roboto+Mono&family=Lora:ital,wght@0,400;0,700;1,400&family=Courier+Prime&family=Press+Start+2P&family=VT323&family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=Rye&family=Quicksand:wght@300;500;700&family=Exo+2:wght@400;800&family=Audiowide&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--text-primary)',
+                        secondary: 'var(--text-secondary)',
+                    },
+                    animation: {
+                        'spin-slow': 'spin 12s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* --- CSS 變數系統 --- */
+        :root {
+            --text-primary: #00f3ff; 
+            --text-secondary: #ff00ff;
+            --bg-color: #050505;
+            --overlay-color: rgba(0, 0, 0, 0.6);
+            --card-bg: rgba(0, 20, 40, 0.7);
+            --border-color: var(--text-primary);
+            --font-main: 'Orbitron', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+            --shadow-glow: 0 0 10px var(--text-primary);
+            --card-border-width: 2px;
+            --scanline-opacity: 1;
+            --btn-bg: rgba(0, 243, 255, 0.2);
+            --btn-hover: rgba(0, 243, 255, 0.4);
+            --ring-track: rgba(255, 255, 255, 0.1);
+            --ring-color: var(--text-primary);
+            --manual-opacity: 1; 
+        }
+
+        /* 主題特定覆寫 */
+        .theme-minimalist { --bg-color: #f3f4f6; --overlay-color: rgba(255,255,255,0.6); --text-secondary: #4b5563; --card-bg: #ffffff; --card-border-width: 0px; --scanline-opacity: 0; --ring-track: #e5e7eb; --ring-color: #374151; }
+        .theme-nature { --bg-color: #1a2f23; --overlay-color: rgba(20,40,30,0.4); --text-secondary: #a5d6a7; --card-bg: rgba(255,255,255,0.1); --card-border-width: 1px; --scanline-opacity: 0; --ring-track: rgba(255,255,255,0.2); --ring-color: #4ade80; }
+        .theme-retro { --bg-color: #2d0b44; --overlay-color: rgba(0,0,0,0.5); --text-secondary: #f472b6; --card-bg: #000000; --card-border-width: 4px; --scanline-opacity: 0.3; --ring-track: #4a1d6e; --ring-color: #f472b6; }
+        .theme-luxury { --bg-color: #0a0a0a; --overlay-color: rgba(0,0,0,0.8); --text-secondary: #f3e5ab; --card-bg: rgba(20,20,20,0.9); --card-border-width: 1px; --scanline-opacity: 0; --ring-track: #333; --ring-color: #d4af37; }
+        .theme-matrix { --bg-color: #000; --overlay-color: rgba(0,10,0,0.8); --text-secondary: #008f11; --card-bg: rgba(0,20,0,0.8); --card-border-width: 1px; --scanline-opacity: 0.2; --ring-track: #003300; --ring-color: #00ff00; }
+        .theme-steampunk { --bg-color: #2b2b2b; --overlay-color: rgba(60,40,20,0.6); --text-secondary: #d2b48c; --card-bg: #1a1a1a; --card-border-width: 4px; --scanline-opacity: 0.1; --ring-track: #443322; --ring-color: #cd7f32; }
+        .theme-space { --bg-color: #0b1026; --overlay-color: rgba(11,16,38,0.6); --text-secondary: #a5b4fc; --card-bg: rgba(255,255,255,0.05); --card-border-width: 0px; --scanline-opacity: 0; --ring-track: rgba(255,255,255,0.1); --ring-color: #818cf8; }
+        .theme-glass { --bg-color: #e0f2fe; --overlay-color: rgba(255,255,255,0.2); --text-secondary: #334155; --card-bg: rgba(255,255,255,0.25); --card-border-width: 1px; --scanline-opacity: 0; --ring-track: rgba(255,255,255,0.4); --ring-color: #0ea5e9; }
+        .theme-neon { --bg-color: #120119; --overlay-color: rgba(18,1,25,0.7); --text-secondary: #0ff; --card-bg: rgba(20,0,30,0.8); --card-border-width: 2px; --scanline-opacity: 0.2; --ring-track: #300a36; --ring-color: #d946ef; }
+
+        body { font-family: var(--font-main); background-color: var(--bg-color); color: var(--text-primary); overflow: hidden; transition: all 0.5s ease; }
+        .mono-font { font-family: var(--font-mono); }
+        .theme-text-primary { color: var(--text-primary); text-shadow: var(--shadow-glow); transition: color 0.5s; }
+        .theme-text-secondary { color: var(--text-secondary); transition: color 0.5s; }
+        
+        .theme-card { background: var(--card-bg); border: var(--card-border-width) solid var(--border-color); box-shadow: var(--shadow-glow); transition: all 0.5s; backdrop-filter: blur(12px); position: relative; z-index: 20; }
+        .theme-btn { background: var(--btn-bg); color: var(--text-primary); border: 1px solid var(--border-color); transition: all 0.3s; box-shadow: var(--shadow-glow); cursor: pointer; }
+        .theme-btn:hover { background: var(--btn-hover); transform: translateY(-2px); }
+
+        .bg-layer { transition: opacity 1.5s ease-in-out; }
+        .bg-overlay { background-color: var(--overlay-color); transition: background-color 0.5s, opacity 0.8s ease-in-out; opacity: 1; }
+        .scanline { width: 100%; height: 100%; z-index: 5; background: linear-gradient(0deg, rgba(0,0,0,0) 50%, rgba(255, 255, 255, 0.03) 50%); background-size: 100% 3px; pointer-events: none; position: absolute; top: 0; left: 0; opacity: var(--scanline-opacity); transition: opacity 0.5s; }
+        #particle-canvas, #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        #confetti-canvas { z-index: 55; }
+
+        #yt-bg-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0; pointer-events: none; transition: opacity 1.5s ease; }
+        #yt-player-placeholder, iframe { position: absolute; top: 50%; left: 50%; width: 300vw; height: 300vh; transform: translate(-50%, -50%); pointer-events: none; border: none; }
+
+        .settings-box { background: rgba(15, 15, 20, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); color: #eee; font-family: 'Inter', sans-serif; height: 85vh; max-height: 800px; width: 90vw; max-width: 900px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; flex-direction: column; padding: 0; border-radius: 1.5rem; overflow: hidden; }
+        .settings-header { padding: 1.5rem 2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); flex-shrink: 0; }
+        .settings-content { overflow-y: auto; flex: 1; padding: 2rem; }
+        .settings-footer { padding: 1rem 2rem 1.5rem 2rem; border-top: 1px solid rgba(255, 255, 255, 0.1); background: rgba(0, 0, 0, 0.3); flex-shrink: 0; z-index: 10; }
+        .settings-content::-webkit-scrollbar { width: 6px; }
+        .settings-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+        .settings-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        input[type="text"], input[type="number"], select, input[type="color"] { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 0.7rem; width: 100%; border-radius: 0.5rem; transition: all 0.3s; font-size: 0.95rem; }
+        input:focus, select:focus { outline: none; border-color: var(--text-primary); background: rgba(255,255,255,0.15); }
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--text-primary); cursor: pointer; border: 2px solid white; transition: transform 0.1s; }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); box-shadow: 0 0 10px var(--text-primary); }
+
+        #central-halo-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; width: 90vmin; height: 90vmin; max-width: 800px; max-height: 800px; pointer-events: none; opacity: 0.5; }
+        .halo-svg { width: 100%; height: 100%; transform: rotate(-90deg); filter: drop-shadow(0 0 15px var(--text-primary)); }
+        .halo-track { stroke: var(--ring-track); stroke-width: 1.5; fill: none; }
+        .halo-progress { stroke: var(--ring-color); stroke-width: 3; fill: none; stroke-linecap: round; will-change: stroke-dashoffset; }
+        .halo-decoration { position: absolute; top: 10%; left: 10%; width: 80%; height: 80%; border: 1px dashed var(--ring-track); border-radius: 50%; animation: spin-slow 20s linear infinite; opacity: 0.3; }
+
+        .digit-container { position: relative; z-index: 10; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .digit-slot { position: absolute; font-size: inherit; font-weight: 900; width: 100%; text-align: center; will-change: transform, opacity; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .digit-curr { transform: translateY(0); opacity: 1; }
+        .digit-next { transform: translateY(100%); opacity: 0; }
+        .animating .digit-curr { transform: translateY(-100%); opacity: 0; }
+        .animating .digit-next { transform: translateY(0); opacity: 1; }
+
+        .overtime-text { color: #ef4444 !important; text-shadow: 0 0 10px red !important; }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+        .animate-pulse-red { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .section-title { display: flex; align-items: center; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: #93c5fd; margin-bottom: 1rem; font-weight: 700; border-left: 4px solid var(--text-primary); padding-left: 0.5rem; }
+
+        .fade-target { opacity: var(--manual-opacity); transition: opacity 0.8s ease-in-out; }
+        .float-btn { transition: opacity 0.8s ease-in-out, transform 0.3s, background-color 0.3s; }
+        
+        body.is-idle .fade-target { opacity: 0.05 !important; }
+        body.is-idle .float-btn { opacity: 0 !important; pointer-events: none; }
+        body.is-idle .bg-overlay { opacity: 0 !important; }
+    </style>
+</head>
+<body id="app-body" class="h-screen w-screen flex flex-col items-center justify-center relative">
+
+    <audio id="custom-audio-player" loop class="hidden"></audio>
+    <audio id="bgm-player" loop class="hidden"></audio>
+
+    <div id="yt-bg-wrapper" class="opacity-0 transition-opacity duration-1000">
+        <div id="yt-player-placeholder"></div>
+    </div>
+
+    <video id="bg-video" autoplay loop muted playsinline class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-1000 z-0"></video>
+    <div id="bg1" class="bg-layer absolute inset-0 bg-cover bg-center bg-no-repeat opacity-100 z-0"></div>
+    <div id="bg2" class="bg-layer absolute inset-0 bg-cover bg-center bg-no-repeat opacity-0 z-0"></div>
+    
+    <canvas id="particle-canvas"></canvas>
+    
+    <div id="central-halo-container" class="fade-target">
+        <div class="halo-decoration"></div>
+        <svg class="halo-svg" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="halo-track" cx="50" cy="50" r="48" />
+            <circle id="main-halo" class="halo-progress" cx="50" cy="50" r="48" />
+        </svg>
+    </div>
+
+    <div class="bg-overlay absolute inset-0 z-0"></div>
+    <div class="scanline"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <main class="z-10 flex flex-col items-center justify-center w-full px-4 text-center relative">
+        <h1 id="event-title" class="fade-target text-3xl md:text-6xl font-bold tracking-widest uppercase mb-12 theme-text-secondary transition-all duration-500 drop-shadow-lg relative z-20">
+            SYSTEM_READY<span class="blink">_</span>
+        </h1>
+
+        <div class="fade-target grid grid-cols-3 gap-4 md:gap-12 w-full max-w-5xl mb-8 relative z-20" role="timer" aria-live="off">
+            <div class="flex flex-col items-center group">
+                <div class="theme-card w-full aspect-square md:aspect-[4/3] mb-4 rounded-xl relative overflow-hidden">
+                    <div id="digit-hours" class="digit-container text-5xl md:text-9xl theme-text-primary mono-font">
+                        <span class="digit-slot digit-curr">00</span><span class="digit-slot digit-next">00</span>
+                    </div>
+                </div>
+                <span class="text-sm md:text-2xl theme-text-secondary tracking-[0.2em] uppercase font-bold">時 (HOURS)</span>
+            </div>
+            <div class="flex flex-col items-center group">
+                <div class="theme-card w-full aspect-square md:aspect-[4/3] mb-4 rounded-xl relative overflow-hidden">
+                    <div id="digit-minutes" class="digit-container text-5xl md:text-9xl theme-text-primary mono-font">
+                        <span class="digit-slot digit-curr">00</span><span class="digit-slot digit-next">00</span>
+                    </div>
+                </div>
+                <span class="text-sm md:text-2xl theme-text-secondary tracking-[0.2em] uppercase font-bold">分 (MINUTES)</span>
+            </div>
+            <div class="flex flex-col items-center group">
+                <div class="theme-card w-full aspect-square md:aspect-[4/3] mb-4 rounded-xl relative overflow-hidden">
+                    <div id="digit-seconds" class="digit-container text-5xl md:text-9xl theme-text-secondary mono-font">
+                        <span class="digit-slot digit-curr">00</span><span class="digit-slot digit-next">00</span>
+                    </div>
+                </div>
+                <span class="text-sm md:text-2xl theme-text-secondary tracking-[0.2em] uppercase font-bold">秒 (SECONDS)</span>
+            </div>
+        </div>
+
+        <div id="mode-badge" class="fade-target mb-8 px-6 py-2 rounded-full bg-gray-800/80 text-white text-sm font-bold tracking-widest hidden border border-gray-600 shadow-lg backdrop-blur-sm relative z-20">WORK TIME</div>
+
+        <div id="controls" class="fade-target hidden flex gap-4 relative z-20">
+             <button id="pause-btn" class="theme-btn px-8 py-3 rounded-lg text-xl font-bold uppercase tracking-widest flex items-center gap-2 hover:brightness-110" tabindex="0"><span>❚❚</span> 暫停 (Pause)</button>
+            <button id="settings-trigger-btn" class="theme-btn px-6 py-3 rounded-lg text-xl font-bold uppercase tracking-widest hover:brightness-110" tabindex="0">⚙ 設定 (Settings)</button>
+        </div>
+
+        <div id="status-msg" class="mt-4 text-3xl md:text-5xl font-bold hidden text-red-500 animate-pulse tracking-widest drop-shadow-[0_0_10px_rgba(239,68,68,0.8)] relative z-20">/// 時間到 (TIME'S UP) ///</div>
+        <button id="stop-alarm-btn" class="hidden mt-8 bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-12 rounded-full shadow-lg text-2xl animate-pulse-red z-50 pointer-events-auto transition-transform hover:scale-105 relative z-20" tabindex="0">🔕 停止鬧鐘</button>
+    </main>
+
+    <button id="bgm-toggle-btn" class="float-btn absolute top-5 left-5 z-50 px-5 py-3 bg-slate-900/80 backdrop-blur-md rounded-full hover:bg-slate-800 border border-white/10 hover:border-primary flex items-center gap-3 shadow-lg" title="背景音樂開關" tabindex="0">
+        <span id="bgm-icon" class="text-xl">🎵</span>
+        <span class="font-bold text-gray-400 tracking-widest text-sm" id="bgm-label">MUSIC</span>
+        <div id="bgm-wave" class="music-wave hidden flex items-center h-4"><span class="bg-primary"></span><span class="bg-primary"></span><span class="bg-primary"></span><span class="bg-primary"></span></div>
+    </button>
+
+    <div class="absolute bottom-5 left-5 z-50 flex gap-2">
+        <button id="fullscreen-btn" class="float-btn p-3 bg-gray-800/80 backdrop-blur-md rounded-full hover:bg-white/10 border border-white/20 hover:border-primary text-white shadow-lg" title="全螢幕模式" tabindex="0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 4l-5-5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+        </button>
+    </div>
+
+    <div class="absolute top-5 right-5 z-50 flex gap-3">
+        <button id="about-btn" class="float-btn p-3 bg-gray-800/80 backdrop-blur-md rounded-full hover:bg-white/10 border border-white/20 hover:border-primary shadow-lg" title="關於本站" tabindex="0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        </button>
+        <!-- Modified: Restart Button replaces Initial Settings in running mode, but for simplicity, keep settings icon -->
+        <button id="initial-settings-btn" class="float-btn p-3 bg-gray-800/80 backdrop-blur-md rounded-full hover:bg-white/10 border border-white/20 hover:border-primary shadow-lg" title="設定" tabindex="0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        </button>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="absolute inset-0 bg-black/60 z-40 flex items-center justify-center transition-all duration-300 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="settings-box">
+            <div class="settings-header flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-1 h-8 bg-primary rounded-full"></div>
+                    <div><h2 id="settings-title" class="text-2xl font-bold text-white tracking-wider">計時器設定</h2><p class="text-xs text-gray-400">v19.0 Productivity Logger</p></div>
+                </div>
+                <button id="close-settings-btn" class="p-2 hover:bg-white/10 rounded-full transition-colors" tabindex="0">✕</button>
+            </div>
+
+            <div class="settings-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-6">
+                    <div class="space-y-8">
+                        <div>
+                            <div class="section-title">🎨 外觀與主題</div>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-gray-300 text-sm mb-2">風格主題</label>
+                                    <select id="input-theme"><option value="default">01. 賽博龐克</option><option value="theme-minimalist">02. 極簡白</option><option value="theme-nature">03. 自然森系</option><option value="theme-retro">04. 復古像素</option><option value="theme-luxury">05. 黑金奢華</option><option value="theme-matrix">06. 駭客任務</option><option value="theme-steampunk">07. 蒸氣龐克</option><option value="theme-space">08. 深空宇宙</option><option value="theme-glass">09. 玻璃擬態</option><option value="theme-neon">10. 霓虹東京</option></select>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-300 text-sm mb-2">主色調</label>
+                                    <div class="flex gap-2"><input type="color" id="input-color" value="#00f3ff" class="h-[42px] p-1 cursor-pointer w-full"><button id="reset-color-btn" class="px-3 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-xs text-gray-400">重置</button></div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4 mb-4 pt-4 border-t border-white/10">
+                                <div>
+                                    <div class="flex justify-between mb-1"><label class="text-gray-300 text-sm">介面透明度 (手動)</label><span id="val-ui-opacity" class="text-primary text-xs font-mono">100%</span></div>
+                                    <input type="range" id="input-ui-opacity" min="10" max="100" value="100">
+                                </div>
+                                <label class="flex items-center space-x-3 cursor-pointer group p-2 hover:bg-white/5 rounded transition">
+                                    <input type="checkbox" id="check-auto-fade" class="form-checkbox w-5 h-5 rounded border-gray-600 bg-black/50 text-primary focus:ring-0" checked>
+                                    <div>
+                                        <span class="block text-sm text-gray-300 group-hover:text-white font-bold">開啟沉浸模式 (Auto-Fade)</span>
+                                        <span class="text-xs text-gray-500">倒數中游標靜止 3 秒後，自動淡出介面與遮罩以觀賞背景</span>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div class="mb-4 pt-4 border-t border-white/10">
+                                <label class="block text-gray-300 text-sm mb-2">YouTube 背景影片/音樂 (API 模式)</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="input-youtube" placeholder="貼上 YouTube 網址" class="text-xs">
+                                    <button id="btn-load-yt" class="px-4 bg-red-600/20 hover:bg-red-600/40 border border-red-500/50 rounded text-red-400 text-xs whitespace-nowrap">載入</button>
+                                </div>
+                                <div id="yt-loading-indicator" class="hidden text-[10px] text-yellow-400 mt-1 flex items-center gap-2">
+                                    <span class="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full"></span> 載入中...
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-gray-300 text-sm mb-2 flex justify-between"><span>背景媒體 (本地)</span><button id="clear-uploads-btn" class="text-red-400 hover:text-red-300 underline text-xs">清除設定</button></label>
+                                <input type="file" id="input-images" multiple accept="image/*,video/mp4,video/webm" class="text-xs text-gray-300 w-full bg-black/40 rounded-lg border border-white/10">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="section-title">🔊 音效設定</div>
+                            <div class="space-y-5 bg-black/20 p-5 rounded-xl border border-white/5">
+                                <div class="space-y-4">
+                                    <div>
+                                        <div class="flex justify-between mb-1"><label class="text-gray-300 text-sm">BGM / YT 音量</label><span id="vol-bgm-val" class="text-primary text-xs font-mono">30%</span></div>
+                                        <input type="range" id="input-vol-bgm" min="0" max="100" value="30">
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1"><label class="text-gray-300 text-sm">鬧鈴音量</label><span id="vol-alarm-val" class="text-secondary text-xs font-mono">80%</span></div>
+                                        <input type="range" id="input-vol-alarm" min="0" max="100" value="80">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                                    <div>
+                                        <label class="text-gray-500 text-xs mb-2 block">BGM 來源</label>
+                                        <select id="input-bgm-type" class="text-xs py-2 w-full"><option value="drone">預設</option><option value="custom">自訂/YT</option><option value="none">靜音</option></select>
+                                        <div id="custom-bgm-upload" class="hidden mt-2"><input type="file" id="input-bgm-file" accept="audio/*" class="w-full text-[10px]"></div>
+                                    </div>
+                                    <div>
+                                        <label class="text-gray-500 text-xs mb-2 block">鬧鈴來源</label>
+                                        <div class="flex gap-2 items-center">
+                                            <select id="input-audio-type" class="text-xs py-2 flex-1"><option value="cyber">科技</option><option value="bell">鐘聲</option><option value="classic">經典</option><option value="custom">自訂</option></select>
+                                            <button id="test-audio-btn" class="px-3 py-2 bg-white/10 hover:bg-white/20 rounded text-xs">🔊</button>
+                                        </div>
+                                        <div id="custom-audio-upload" class="hidden mt-2"><input type="file" id="input-audio-file" accept="audio/*" class="w-full text-[10px]"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-8">
+                        <div>
+                            <div class="section-title">⏱️ 時間與模式</div>
+                            <div class="mb-5"><label class="block text-gray-300 text-sm mb-2">標題</label><input type="text" id="input-title" placeholder="例如: 產品發布會" class="font-bold tracking-wide"></div>
+                            <div class="bg-black/30 p-1 rounded-lg flex mb-5 border border-white/5">
+                                <button id="mode-std-btn" class="flex-1 py-2 text-sm font-bold rounded-md bg-white/10 text-white shadow-sm transition-all" tabindex="0">一般倒數</button>
+                                <button id="mode-pomo-btn" class="flex-1 py-2 text-sm font-bold rounded-md text-gray-500 hover:text-white transition-all" tabindex="0">番茄鐘模式</button>
+                                <button id="mode-sw-btn" class="flex-1 py-2 text-sm font-bold rounded-md text-gray-500 hover:text-white transition-all" tabindex="0">碼表</button>
+                            </div>
+                            <div id="standard-time-inputs" class="space-y-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="block text-gray-400 text-xs mb-2">分 (Min)</label><input type="number" id="input-min" min="0" value="10" class="text-center font-mono text-2xl py-3 font-bold bg-white/5 border-white/10 focus:bg-white/10"></div>
+                                    <div><label class="block text-gray-400 text-xs mb-2">秒 (Sec)</label><input type="number" id="input-sec" min="0" max="59" value="0" class="text-center font-mono text-2xl py-3 font-bold bg-white/5 border-white/10 focus:bg-white/10"></div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button class="preset-btn flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-gray-400 hover:text-white transition-all" data-add="5">+5m</button>
+                                    <button class="preset-btn flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-gray-400 hover:text-white transition-all" data-add="10">+10m</button>
+                                    <button class="preset-btn flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs text-gray-400 hover:text-white transition-all" data-add="25">+25m</button>
+                                </div>
+                            </div>
+                            <div id="pomodoro-time-inputs" class="grid grid-cols-2 gap-4 hidden">
+                                <div><label class="block text-green-400 text-xs mb-2 font-bold">工作 (分)</label><input type="number" id="input-pomo-work" min="1" value="25" class="text-center font-mono text-xl py-3 border-green-500/30 bg-green-900/10"></div>
+                                <div><label class="block text-blue-400 text-xs mb-2 font-bold">休息 (分)</label><input type="number" id="input-pomo-break" min="1" value="5" class="text-center font-mono text-xl py-3 border-blue-500/30 bg-blue-900/10"></div>
+                            </div>
+                            <div id="stopwatch-intro" class="hidden text-center text-gray-400 text-sm py-4 border border-white/10 rounded bg-white/5">
+                                <p>正計時模式 (Count Up)</p>
+                                <p class="text-xs mt-1">點擊開始後將無限計時</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div id="advanced-settings-group">
+                                <div class="section-title">⚡ 進階功能</div>
+                                <div class="bg-black/20 p-5 rounded-xl border border-white/5 space-y-4">
+                                    <label class="flex items-center space-x-3 cursor-pointer group p-2 hover:bg-white/5 rounded transition"><input type="checkbox" id="check-overtime" class="form-checkbox w-5 h-5 rounded border-gray-600 bg-black/50 text-primary focus:ring-0"><div><span class="block text-sm text-gray-300 group-hover:text-white font-bold">允許超時正計時</span><span class="text-xs text-gray-500">倒數結束後顯示負數時間</span></div></label>
+                                    <label class="flex items-center space-x-3 cursor-pointer group p-2 hover:bg-white/5 rounded transition"><input type="checkbox" id="check-tts" class="form-checkbox w-5 h-5 rounded border-gray-600 bg-black/50 text-primary focus:ring-0"><div><span class="block text-sm text-gray-300 group-hover:text-white font-bold">啟用語音報時</span><span class="text-xs text-gray-500">在關鍵時刻語音提醒</span></div></label>
+                                    
+                                    <!-- v19.0: Auto History Feature -->
+                                    <div class="pt-2 border-t border-white/5">
+                                        <label class="flex items-center space-x-3 cursor-pointer group p-2 hover:bg-white/5 rounded transition">
+                                            <input type="checkbox" id="check-auto-history" class="form-checkbox w-5 h-5 rounded border-gray-600 bg-black/50 text-primary focus:ring-0" checked>
+                                            <div>
+                                                <span class="block text-sm text-gray-300 group-hover:text-white font-bold">自動下載歷程記錄 (Auto History)</span>
+                                                <span class="text-xs text-gray-500">計時結束或重置時，自動匯出歷程為 JSON</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 space-y-2">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <button id="export-btn" class="flex items-center justify-center gap-2 py-3 px-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg text-sm text-gray-300 hover:text-white transition-all shadow-sm">匯出設定檔</button>
+                                    <label class="flex items-center justify-center gap-2 py-3 px-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg text-sm text-gray-300 hover:text-white transition-all cursor-pointer shadow-sm">匯入設定檔<input type="file" id="import-file" accept=".json" class="hidden"></label>
+                                </div>
+                                <!-- v19.0: Manual Download History -->
+                                <button id="manual-history-btn" class="w-full py-2 bg-blue-900/40 hover:bg-blue-800/60 border border-blue-500/30 rounded-lg text-xs text-blue-300 hover:text-white transition-all font-bold tracking-widest">📥 手動下載歷程記錄 (Download History)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-footer flex gap-2">
+                <!-- v19.0 Add explicitly a Reset Button inside settings for ease of use -->
+                <button id="reset-system-btn" class="w-1/3 bg-gray-800 hover:bg-gray-700 text-white font-bold py-5 rounded-xl border border-gray-600 transition-all text-xl tracking-widest" tabindex="0">重置 (RESET)</button>
+                <button id="start-btn" class="w-2/3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-5 rounded-xl shadow-[0_0_20px_rgba(0,180,255,0.4)] hover:shadow-[0_0_30px_rgba(0,180,255,0.6)] transform hover:scale-[1.01] transition-all text-xl tracking-widest border border-white/20" tabindex="0">開始倒數 (START)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Panel -->
+    <div id="about-panel" class="absolute inset-0 bg-black/80 z-[60] flex items-center justify-center transition-all duration-300 opacity-0 pointer-events-none backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="about-title">
+        <div class="settings-box p-8 w-11/12 max-w-md rounded-2xl relative border border-white/10 text-center flex flex-col justify-center h-auto">
+            <button id="close-about-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl" tabindex="0">✕</button>
+            <h2 id="about-title" class="text-2xl font-bold text-white mb-6">關於本站</h2>
+            <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
+                <p>Tech Countdown v19.0 - Productivity Logger</p>
+                <div class="py-4 border-y border-white/10 my-4"><p class="font-bold text-primary mb-2">製作者</p><p>Gemini & 施棨耀</p></div>
+                <div class="text-xs text-gray-500 text-left bg-black/20 p-3 rounded-lg"><strong class="block mb-1 text-gray-400">⚠️ 說明</strong><br>v19.0 新增了生產力歷程追蹤功能。系統會自動記錄您的計時器操作，並可於結束時自動下載為 JSON 檔案。</div>
+            </div>
+            <button id="close-about-btn-btm" class="mt-6 px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors" tabindex="0">關閉</button>
+        </div>
+    </div>
+
+    <script>
+        const themeBackgrounds = {
+            'default': 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&w=1920&q=80',
+            'theme-minimalist': 'https://images.unsplash.com/photo-1493723843684-a63bc830e395?auto=format&fit=crop&w=1920&q=80',
+            'theme-nature': 'https://images.unsplash.com/photo-1448375240586-dfd8d395ea6c?auto=format&fit=crop&w=1920&q=80',
+            'theme-retro': 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=1920&q=80',
+            'theme-luxury': 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&w=1920&q=80',
+            'theme-matrix': 'https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?auto=format&fit=crop&w=1920&q=80',
+            'theme-steampunk': 'https://images.unsplash.com/photo-1535905557558-afc4877a26fc?auto=format&fit=crop&w=1920&q=80',
+            'theme-space': 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1920&q=80',
+            'theme-glass': 'https://images.unsplash.com/photo-1504198458649-3128b932f49e?auto=format&fit=crop&w=1920&q=80',
+            'theme-neon': 'https://images.unsplash.com/photo-1565214975484-3cfa9e56f914?auto=format&fit=crop&w=1920&q=80'
+        };
+
+        class EventEmitter {
+            constructor() { this.events = {}; }
+            on(event, listener) { if (!this.events[event]) this.events[event] = []; this.events[event].push(listener); }
+            emit(event, data) { if (this.events[event]) this.events[event].forEach(fn => fn(data)); }
+        }
+
+        class TimerState extends EventEmitter {
+            constructor() { super(); this.reset(); }
+            reset() {
+                this.mode = 'standard'; this.status = 'idle'; this.totalTime = 0; this.remaining = 0; this.elapsed = 0; this.isBreak = false;
+                this.history = []; // v19.0 History Array
+                this.config = { allowOvertime: false, enableTTS: false, theme: 'default', color: '#00f3ff', autoHistory: true };
+            }
+            setConfig(key, value) { this.config[key] = value; this.emit('configChange', { key, value }); }
+            
+            // v19.0: Method to log history events
+            addLog(action, details = {}) {
+                this.history.push({
+                    timestamp: new Date().toISOString(),
+                    action: action,
+                    ...details
+                });
+            }
+        }
+
+        class YouTubeManager {
+            constructor(app) {
+                this.app = app; 
+                this.player = null;
+                this.videoId = null;
+                this.wrapper = document.getElementById('yt-bg-wrapper');
+                this.indicator = document.getElementById('yt-loading-indicator');
+                this.isApiReady = false;
+                this.queue = null;
+                this.initAPI();
+            }
+            initAPI() {
+                if (window.YT && window.YT.Player) { this.isApiReady = true; } 
+                else if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+                    const tag = document.createElement('script'); tag.src = "https://www.youtube.com/iframe_api";
+                    const firstScriptTag = document.getElementsByTagName('script')[0]; firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                }
+                window.onYouTubeIframeAPIReady = () => { this.isApiReady = true; if(this.queue) { this.loadVideo(this.queue); this.queue = null; } };
+            }
+            extractId(url) {
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : null;
+            }
+            loadVideo(urlOrId) {
+                let id = urlOrId;
+                if (urlOrId.includes('.') || urlOrId.includes('://')) { const extracted = this.extractId(urlOrId); if(extracted) id = extracted; }
+                if (!id || id.length !== 11) { alert("影片 ID 無效"); return; }
+                this.videoId = id;
+                if (!this.isApiReady) { this.queue = id; this.indicator.classList.remove('hidden'); return; }
+                this.indicator.classList.remove('hidden');
+                this.app.ui.enableYouTubeMode(); 
+                this.createPlayer(id);
+            }
+            createPlayer(id) {
+                if (this.player) { try { this.player.destroy(); } catch(e){} this.player = null; }
+                if (!document.getElementById('yt-player-placeholder')) { this.wrapper.innerHTML = '<div id="yt-player-placeholder"></div>'; }
+                this.wrapper.classList.remove('opacity-0');
+                this.player = new YT.Player('yt-player-placeholder', {
+                    videoId: id,
+                    playerVars: { 'autoplay': 1, 'controls': 0, 'showinfo': 0, 'modestbranding': 1, 'loop': 1, 'playlist': id, 'mute': 1, 'rel': 0, 'playsinline': 1, 'enablejsapi': 1, 'origin': window.location.origin },
+                    events: {
+                        'onReady': (e) => { this.indicator.classList.add('hidden'); e.target.mute(); e.target.playVideo(); },
+                        'onStateChange': (e) => { if (e.data === YT.PlayerState.ENDED) e.target.playVideo(); },
+                        'onError': (e) => { console.warn("YT Error:", e.data); this.indicator.classList.add('hidden'); alert("無法播放 (可能受版權限制)"); }
+                    }
+                });
+            }
+            activateAudio(vol) { if (this.player && typeof this.player.unMute === 'function') { this.player.unMute(); this.player.setVolume(vol); } }
+            setVolume(vol) { if (this.player && typeof this.player.setVolume === 'function') { this.player.setVolume(vol); } }
+            stop() { this.wrapper.classList.add('opacity-0'); if (this.player) { try { this.player.stopVideo(); } catch(e){} } }
+        }
+
+        class TimerEngine {
+            constructor(state) {
+                this.state = state;
+                this.endTime = 0; this.startTime = 0; this.pauseTime = 0; this.rafId = null; this.ttsAnnounced = new Set(); this.wakeLock = null;
+            }
+            start(seconds) {
+                if(this.rafId) cancelAnimationFrame(this.rafId);
+                this.state.status = 'running';
+                this.ttsAnnounced.clear();
+                
+                if (this.state.mode === 'stopwatch') {
+                    this.startTime = Date.now();
+                    this.state.elapsed = 0;
+                } else {
+                    this.state.totalTime = seconds;
+                    this.endTime = Date.now() + seconds * 1000;
+                }
+                
+                this.loop();
+                this.state.emit('start', seconds);
+                if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then(l => { this.wakeLock = l; }).catch(e => {});
+            }
+            pause() {
+                if (this.state.status !== 'running' && this.state.status !== 'overtime') return;
+                this.state.status = 'paused';
+                cancelAnimationFrame(this.rafId);
+                this.pauseTime = Date.now();
+                this.state.emit('pause');
+                if (this.wakeLock) this.wakeLock.release().then(() => this.wakeLock = null);
+            }
+            resume() {
+                if (this.state.status !== 'paused') return;
+                const pausedDuration = Date.now() - this.pauseTime;
+                
+                if (this.state.mode === 'stopwatch') {
+                    this.startTime += pausedDuration;
+                } else {
+                    this.endTime += pausedDuration;
+                    this.state.status = this.state.remaining < 0 ? 'overtime' : 'running';
+                }
+                
+                if (this.state.mode !== 'stopwatch') {
+                     this.state.status = this.state.remaining < 0 ? 'overtime' : 'running';
+                } else {
+                    this.state.status = 'running';
+                }
+
+                this.loop();
+                this.state.emit('resume');
+                if ('wakeLock' in navigator) navigator.wakeLock.request('screen').then(l => this.wakeLock = l).catch(e => {});
+            }
+            loop() {
+                const now = Date.now();
+                
+                if (this.state.mode === 'stopwatch') {
+                    this.state.elapsed = now - this.startTime;
+                    this.state.emit('tick', { elapsed: this.state.elapsed });
+                } else {
+                    const remainingMs = this.endTime - now;
+                    this.state.remaining = remainingMs;
+                    if (remainingMs <= 0) {
+                        if (this.state.status === 'running') {
+                            this.state.status = this.state.config.allowOvertime ? 'overtime' : 'completed';
+                            this.state.emit(this.state.status === 'overtime' ? 'overtimeStart' : 'complete');
+                            if (this.state.status === 'completed') { cancelAnimationFrame(this.rafId); if(this.wakeLock) this.wakeLock.release(); return; }
+                        }
+                    }
+                    if (this.state.config.enableTTS && remainingMs > 0) this.checkTTS(Math.ceil(remainingMs / 1000));
+                    this.state.emit('tick', { remaining: remainingMs, total: this.state.totalTime * 1000 });
+                }
+                
+                this.rafId = requestAnimationFrame(() => this.loop());
+            }
+            checkTTS(sec) {
+                const triggers = { 300: "剩下五分鐘", 60: "剩下一分鐘", 10: "十秒" };
+                if (triggers[sec] && !this.ttsAnnounced.has(sec)) { this.ttsAnnounced.add(sec); this.state.emit('tts', triggers[sec]); }
+            }
+        }
+
+        class AudioManager {
+            constructor() {
+                this.ctx = null; this.gainNode = null; this.bgmEl = document.getElementById('bgm-player'); this.alarmEl = document.getElementById('custom-audio-player');
+                this.synthInterval = null; this.vols = { bgm: 0.3, alarm: 0.8 };
+            }
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (this.ctx.state === 'suspended') this.ctx.resume(); }
+            playBGM(type, customUrl) {
+                this.init(); this.stopBGM();
+                if (type === 'none') return;
+                if (type === 'custom' && customUrl) {
+                    this.bgmEl.src = customUrl; this.bgmEl.volume = this.vols.bgm;
+                    this.bgmEl.play().catch(e => console.warn('Autoplay blocked', e));
+                } else if (type === 'drone') this.playDrone();
+            }
+            stopBGM() { this.bgmEl.pause(); if (this.gainNode) { this.gainNode.disconnect(); this.gainNode = null; } }
+            playAlarm(type, customUrl) {
+                this.init(); this.stopAlarm();
+                if (type === 'custom' && customUrl) { this.alarmEl.src = customUrl; this.alarmEl.volume = this.vols.alarm; this.alarmEl.play(); }
+                else this.playSynthAlarm(type);
+            }
+            stopAlarm() { this.alarmEl.pause(); this.alarmEl.currentTime = 0; if (this.synthInterval) clearInterval(this.synthInterval); }
+            playDrone() {
+                const osc1 = this.ctx.createOscillator(), osc2 = this.ctx.createOscillator();
+                this.gainNode = this.ctx.createGain();
+                osc1.frequency.value = 100; osc2.frequency.value = 102;
+                this.gainNode.gain.value = this.vols.bgm * 0.1;
+                osc1.connect(this.gainNode); osc2.connect(this.gainNode);
+                this.gainNode.connect(this.ctx.destination);
+                osc1.start(); osc2.start();
+            }
+            playSynthAlarm(type) {
+                const beep = () => {
+                    const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                    osc.connect(gain); gain.connect(this.ctx.destination); const now = this.ctx.currentTime;
+                    if (type === 'cyber') { osc.type='sawtooth'; osc.frequency.setValueAtTime(440,now); osc.frequency.linearRampToValueAtTime(880,now+0.5); gain.gain.setValueAtTime(this.vols.alarm*0.3,now); osc.start(); osc.stop(now+0.8); }
+                    else if (type === 'bell') { osc.type='sine'; osc.frequency.setValueAtTime(600,now); gain.gain.setValueAtTime(0,now); gain.gain.linearRampToValueAtTime(this.vols.alarm*0.5,now+0.05); gain.gain.exponentialRampToValueAtTime(0.001,now+2); osc.start(); osc.stop(now+2); }
+                    else { osc.type='square'; osc.frequency.setValueAtTime(1000,now); gain.gain.setValueAtTime(this.vols.alarm*0.1,now); osc.start(); osc.stop(now+0.2); }
+                };
+                beep(); this.synthInterval = setInterval(beep, type === 'bell' ? 2500 : (type === 'cyber' ? 1000 : 500));
+            }
+            setVolume(type, val) {
+                this.vols[type] = val / 100;
+                if(type === 'bgm') this.bgmEl.volume = this.vols.bgm;
+                if(type === 'alarm') this.alarmEl.volume = this.vols.alarm;
+            }
+        }
+
+        class UIManager {
+            constructor(state) {
+                this.state = state;
+                this.els = this.cacheDOM();
+                this.haloCircumference = 2 * Math.PI * this.els.halo.r.baseVal.value;
+                this.els.halo.style.strokeDasharray = `${this.haloCircumference} ${this.haloCircumference}`;
+                this.els.halo.style.strokeDashoffset = this.haloCircumference;
+                this.prevTime = { h: null, m: null, s: null };
+                this.activeBg = 1;
+            }
+            cacheDOM() {
+                return {
+                    hours: document.getElementById('digit-hours'), minutes: document.getElementById('digit-minutes'), seconds: document.getElementById('digit-seconds'),
+                    halo: document.getElementById('main-halo'), title: document.getElementById('event-title'),
+                    statusMsg: document.getElementById('status-msg'), controls: document.getElementById('controls'),
+                    pauseBtn: document.getElementById('pause-btn'), startBtn: document.getElementById('start-btn'),
+                    stopAlarmBtn: document.getElementById('stop-alarm-btn'), settingsPanel: document.getElementById('settings-panel'),
+                    appBody: document.getElementById('app-body'), bg1: document.getElementById('bg1'), bg2: document.getElementById('bg2'), bgVideo: document.getElementById('bg-video')
+                };
+            }
+            update(tickData) {
+                let h, m, s, ms;
+                
+                if (this.state.mode === 'stopwatch') {
+                    ms = tickData.elapsed;
+                    const progress = (ms % 60000) / 60000;
+                    this.els.halo.style.strokeDashoffset = this.haloCircumference * (1 - progress);
+                    this.els.halo.style.stroke = getComputedStyle(document.documentElement).getPropertyValue('--ring-color').trim();
+                    document.title = `(${Math.floor(ms/60000).toString().padStart(2,'0')}:${Math.floor((ms%60000)/1000).toString().padStart(2,'0')}) 計時中... - Tech Countdown`;
+                } else {
+                    ms = tickData.remaining;
+                    const total = tickData.total;
+                    const progress = (ms > 0 && total > 0) ? ms/total : 0;
+                    this.els.halo.style.strokeDashoffset = ms < 0 ? 0 : this.haloCircumference * (1 - progress);
+                    if (ms < 0) this.els.halo.style.stroke = '#ef4444';
+                    else this.els.halo.style.stroke = getComputedStyle(document.documentElement).getPropertyValue('--ring-color').trim();
+                    
+                    document.title = `(${Math.floor(Math.abs(ms)/60000).toString().padStart(2,'0')}:${Math.floor((Math.abs(ms)%60000)/1000).toString().padStart(2,'0')}) ${ms<0?"超時":"倒數"} - Tech Countdown`;
+                }
+
+                const absMs = Math.abs(ms);
+                h = Math.floor(absMs / 3600000);
+                m = Math.floor((absMs % 3600000) / 60000);
+                s = Math.floor((absMs % 60000) / 1000);
+
+                this.updateDigitSlot(this.els.hours, h, 'h'); 
+                this.updateDigitSlot(this.els.minutes, m, 'm'); 
+                this.updateDigitSlot(this.els.seconds, s, 's');
+            }
+            updateDigitSlot(container, val, key) {
+                const strVal = val.toString().padStart(2, '0');
+                if (this.prevTime[key] === strVal) return;
+                this.prevTime[key] = strVal;
+                const curr = container.querySelector('.digit-curr'), next = container.querySelector('.digit-next');
+                if(!curr || !next) return;
+                next.innerText = strVal; container.classList.add('animating');
+                setTimeout(() => { container.classList.remove('animating'); curr.innerText = strVal; }, 400);
+            }
+            togglePanel(id, show) {
+                const el = document.getElementById(id);
+                if(show) el.classList.remove('opacity-0', 'pointer-events-none');
+                else el.classList.add('opacity-0', 'pointer-events-none');
+            }
+            applyTheme(theme) {
+                this.els.appBody.className = `h-screen w-screen flex flex-col items-center justify-center relative ${theme}`;
+                setTimeout(() => { this.els.halo.style.stroke = getComputedStyle(document.documentElement).getPropertyValue('--ring-color').trim(); }, 100);
+            }
+            enableYouTubeMode() {
+                this.els.bg1.style.opacity = 0;
+                this.els.bg2.style.opacity = 0;
+                this.els.bgVideo.classList.add('opacity-0');
+            }
+            setBackground(url, isVideo = false) {
+                const video = this.els.bgVideo;
+                if (isVideo) { video.src = url; video.classList.remove('opacity-0'); this.els.bg1.style.opacity=0; this.els.bg2.style.opacity=0; return; }
+                video.classList.add('opacity-0'); video.src = "";
+                const target = this.activeBg === 1 ? this.els.bg2 : this.els.bg1;
+                const other = this.activeBg === 1 ? this.els.bg1 : this.els.bg2;
+                target.style.backgroundImage = `url('${url}')`; target.style.opacity = 1; other.style.opacity = 0;
+                this.activeBg = this.activeBg === 1 ? 2 : 1;
+            }
+            clearBackgrounds() {
+                this.els.bgVideo.classList.add('opacity-0'); this.els.bgVideo.src = "";
+                this.els.bg1.style.opacity = 0; this.els.bg2.style.opacity = 0;
+                document.getElementById('yt-bg-wrapper').classList.add('opacity-0');
+            }
+        }
+
+        class EffectManager {
+            constructor() {
+                this.canvas = document.getElementById('confetti-canvas'); this.ctx = this.canvas.getContext('2d');
+                this.particles = []; this.isActive = false;
+                window.addEventListener('resize', () => { this.canvas.width=window.innerWidth; this.canvas.height=window.innerHeight; });
+                this.canvas.width=window.innerWidth; this.canvas.height=window.innerHeight;
+            }
+            fireConfetti() {
+                this.isActive = true;
+                this.particles = Array.from({length: 150}, () => ({
+                    x: Math.random()*this.canvas.width, y: Math.random()*this.canvas.height-this.canvas.height,
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`, size: Math.random()*8+4,
+                    speedY: Math.random()*5+2, speedX: Math.random()*4-2, rotation: Math.random()*360
+                }));
+                this.loop();
+            }
+            stop() {
+                this.isActive = false;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            loop() {
+                if (!this.isActive) return;
+                this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+                this.particles.forEach(p => {
+                    p.y+=p.speedY; p.x+=p.speedX; p.rotation+=2;
+                    this.ctx.save(); this.ctx.translate(p.x, p.y); this.ctx.rotate(p.rotation*Math.PI/180);
+                    this.ctx.fillStyle=p.color; this.ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size); this.ctx.restore();
+                    if(p.y>this.canvas.height) { p.y=-20; p.x=Math.random()*this.canvas.width; }
+                });
+                requestAnimationFrame(() => this.loop());
+            }
+        }
+
+        class App {
+            constructor() {
+                this.state = new TimerState();
+                this.engine = new TimerEngine(this.state);
+                this.ui = new UIManager(this.state);
+                this.audio = new AudioManager();
+                this.fx = new EffectManager();
+                this.yt = new YouTubeManager(this);
+                
+                this.uploadedImages = []; this.uploadedVideoUrl = null; this.bgInterval = null;
+                this.customBgmUrl = null; this.customAlarmUrl = null;
+                
+                this.idleTimer = null;
+                this.autoFadeEnabled = true;
+
+                this.bindEvents();
+                this.initDefaults();
+            }
+
+            initDefaults() {
+                this.ui.applyTheme('default');
+                this.updateBackgroundByTheme('default');
+                this.initBackgroundParticles();
+            }
+
+            resetIdle() {
+                document.body.classList.remove('is-idle');
+                clearTimeout(this.idleTimer);
+                if (this.autoFadeEnabled && (this.state.status === 'running' || this.state.status === 'overtime')) {
+                    this.idleTimer = setTimeout(() => {
+                        if(!document.getElementById('settings-panel').classList.contains('opacity-0')) return;
+                        document.body.classList.add('is-idle');
+                    }, 3000);
+                }
+            }
+
+            // v19.0 History Logic
+            downloadHistory(manual = false) {
+                if (this.state.history.length === 0) {
+                    if (manual) alert("目前沒有歷程記錄可以匯出。");
+                    return;
+                }
+                
+                // If it's auto-download, but user disabled it, then skip
+                if (!manual && !this.state.config.autoHistory) return;
+
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state.history, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                
+                const date = new Date();
+                const timestamp = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}_${date.getHours().toString().padStart(2,'0')}${date.getMinutes().toString().padStart(2,'0')}`;
+                
+                downloadAnchorNode.setAttribute("download", `countdown_history_${timestamp}.json`);
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+                
+                // Clear history after download to prevent duplicates next time
+                this.state.history = [];
+            }
+
+            bindEvents() {
+                window.addEventListener('mousemove', () => this.resetIdle());
+                window.addEventListener('mousedown', () => this.resetIdle());
+                window.addEventListener('keydown', () => this.resetIdle());
+                window.addEventListener('touchstart', () => this.resetIdle());
+
+                this.state.on('tick', (data) => this.ui.update(data));
+                this.state.on('start', () => {
+                    this.ui.togglePanel('settings-panel', false);
+                    document.getElementById('controls').classList.remove('hidden');
+                    document.getElementById('status-msg').classList.add('hidden');
+                    document.getElementById('stop-alarm-btn').classList.add('hidden');
+                    this.fx.stop();
+                    const vol = document.getElementById('input-vol-bgm').value;
+                    this.yt.activateAudio(vol);
+                    this.resetIdle(); 
+                    
+                    // v19.0: Log Start
+                    const title = document.getElementById('input-title').value || "SYSTEM_ACTIVE";
+                    this.state.addLog('START', { mode: this.state.mode, title: title, durationSec: this.state.totalTime });
+                });
+                
+                this.state.on('complete', () => {
+                    document.body.classList.remove('is-idle'); 
+                    clearTimeout(this.idleTimer);
+
+                    // v19.0: Log Complete
+                    this.state.addLog('COMPLETE', { isBreak: this.state.isBreak });
+
+                    this.fx.fireConfetti();
+                    this.audio.playAlarm(document.getElementById('input-audio-type').value, this.customAlarmUrl);
+                    
+                    if (this.state.mode === 'pomodoro') {
+                        const msg = document.getElementById('status-msg');
+                        msg.innerText = this.state.isBreak ? "/// BREAK ENDED ///" : "/// WORK DONE ///";
+                        msg.classList.remove('hidden');
+
+                        setTimeout(() => {
+                            this.audio.stopAlarm();
+                            this.fx.stop();
+                            msg.classList.add('hidden');
+                            
+                            this.state.isBreak = !this.state.isBreak;
+                            this.updatePomodoroBadge();
+
+                            let nextTime = 0;
+                            if (this.state.isBreak) {
+                                nextTime = (parseInt(document.getElementById('input-pomo-break').value)||5) * 60;
+                                this.state.emit('tts', "開始休息");
+                            } else {
+                                nextTime = (parseInt(document.getElementById('input-pomo-work').value)||25) * 60;
+                                this.state.emit('tts', "開始工作");
+                            }
+                            this.engine.start(nextTime);
+                        }, 4000); 
+
+                    } else {
+                        document.getElementById('status-msg').innerText = "/// TIME'S UP ///";
+                        document.getElementById('status-msg').classList.remove('hidden');
+                        document.getElementById('stop-alarm-btn').classList.remove('hidden');
+                    }
+                });
+
+                this.state.on('overtimeStart', () => {
+                     const msg = document.getElementById('status-msg');
+                     msg.innerText = "OVERTIME / 超時"; msg.classList.remove('hidden'); msg.classList.add('overtime-text');
+                     // v19.0: Log Overtime
+                     this.state.addLog('OVERTIME_START', {});
+                });
+                
+                this.state.on('pause', () => {
+                    document.body.classList.remove('is-idle');
+                    clearTimeout(this.idleTimer);
+                });
+
+                this.state.on('tts', (text) => {
+                    if('speechSynthesis' in window) { const u = new SpeechSynthesisUtterance(text); u.lang='zh-TW'; window.speechSynthesis.speak(u); }
+                });
+
+                document.getElementById('start-btn').addEventListener('click', () => this.startTimer());
+                document.getElementById('pause-btn').addEventListener('click', () => this.togglePause());
+                
+                document.getElementById('stop-alarm-btn').addEventListener('click', () => {
+                    this.audio.stopAlarm();
+                    this.fx.stop();
+                    document.getElementById('stop-alarm-btn').classList.add('hidden');
+                    
+                    // v19.0: Log Stop Alarm & Trigger Auto Download
+                    this.state.addLog('STOP_ALARM', {});
+                    this.downloadHistory();
+                });
+
+                // v19.0 Add explicitly a Reset Button handler
+                document.getElementById('reset-system-btn').addEventListener('click', () => this.reset());
+
+                // Settings Toggles
+                document.getElementById('settings-trigger-btn').addEventListener('click', () => {
+                    this.ui.togglePanel('settings-panel', true);
+                    document.body.classList.remove('is-idle');
+                });
+                document.getElementById('close-settings-btn').addEventListener('click', () => this.ui.togglePanel('settings-panel', false));
+                document.getElementById('initial-settings-btn').addEventListener('click', () => this.ui.togglePanel('settings-panel', true));
+                document.getElementById('about-btn').addEventListener('click', () => this.ui.togglePanel('about-panel', true));
+                document.getElementById('close-about-btn').addEventListener('click', () => this.ui.togglePanel('about-panel', false));
+                document.getElementById('close-about-btn-btm').addEventListener('click', () => this.ui.togglePanel('about-panel', false));
+
+                // v18.3 UI Opacity Inputs
+                document.getElementById('input-ui-opacity').addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    document.documentElement.style.setProperty('--manual-opacity', val / 100);
+                    document.getElementById('val-ui-opacity').innerText = val + '%';
+                });
+
+                document.getElementById('check-auto-fade').addEventListener('change', (e) => {
+                    this.autoFadeEnabled = e.target.checked;
+                    this.resetIdle();
+                });
+
+                // v19.0 Auto History Inputs
+                document.getElementById('check-auto-history').addEventListener('change', (e) => {
+                    this.state.config.autoHistory = e.target.checked;
+                });
+                document.getElementById('manual-history-btn').addEventListener('click', () => {
+                    this.downloadHistory(true);
+                });
+
+                document.getElementById('input-theme').addEventListener('change', (e) => {
+                    this.ui.applyTheme(e.target.value);
+                    if(this.uploadedImages.length === 0 && !this.uploadedVideoUrl && !this.yt.videoId) {
+                        this.updateBackgroundByTheme(e.target.value);
+                    }
+                });
+                document.getElementById('input-color').addEventListener('change', (e) => {
+                    document.documentElement.style.setProperty('--text-primary', e.target.value);
+                    document.documentElement.style.setProperty('--border-color', e.target.value);
+                    document.documentElement.style.setProperty('--shadow-glow', `0 0 10px ${e.target.value}`);
+                    document.documentElement.style.setProperty('--ring-color', e.target.value);
+                });
+                
+                document.getElementById('input-images').addEventListener('change', (e) => this.handleFileUpload(e));
+                document.getElementById('clear-uploads-btn').addEventListener('click', () => this.clearUploads());
+
+                // YouTube Input
+                document.getElementById('btn-load-yt').addEventListener('click', () => {
+                    const url = document.getElementById('input-youtube').value;
+                    this.ui.clearBackgrounds(); 
+                    this.yt.loadVideo(url);
+                });
+
+                // Audio
+                document.getElementById('input-bgm-type').addEventListener('change', (e) => {
+                    document.getElementById('custom-bgm-upload').classList.toggle('hidden', e.target.value !== 'custom');
+                    if(e.target.value !== 'custom') {
+                        this.audio.playBGM(e.target.value);
+                    } else if(this.customBgmUrl) this.audio.playBGM('custom', this.customBgmUrl);
+                });
+                document.getElementById('input-audio-type').addEventListener('change', (e) => {
+                    document.getElementById('custom-audio-upload').classList.toggle('hidden', e.target.value !== 'custom');
+                });
+                document.getElementById('input-bgm-file').addEventListener('change', (e) => this.handleAudioUpload(e, 'bgm'));
+                document.getElementById('input-audio-file').addEventListener('change', (e) => this.handleAudioUpload(e, 'alarm'));
+                
+                document.getElementById('input-vol-bgm').addEventListener('input', (e) => {
+                    this.audio.setVolume('bgm', e.target.value);
+                    this.yt.setVolume(e.target.value);
+                    document.getElementById('vol-bgm-val').innerText = e.target.value + '%';
+                });
+                document.getElementById('input-vol-alarm').addEventListener('input', (e) => {
+                    this.audio.setVolume('alarm', e.target.value);
+                    document.getElementById('vol-alarm-val').innerText = e.target.value + '%';
+                });
+                document.getElementById('bgm-toggle-btn').addEventListener('click', () => {
+                    if(this.audio.bgmEl.paused && !this.audio.gainNode) {
+                        this.audio.playBGM(document.getElementById('input-bgm-type').value, this.customBgmUrl);
+                    } else { this.audio.stopBGM(); }
+                });
+                document.getElementById('test-audio-btn').addEventListener('click', () => {
+                    this.audio.playAlarm(document.getElementById('input-audio-type').value, this.customAlarmUrl);
+                });
+
+                // JSON Settings
+                document.getElementById('export-btn').addEventListener('click', () => this.exportSettings());
+                document.getElementById('import-file').addEventListener('change', (e) => this.importSettings(e));
+
+                // Presets
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const input = document.getElementById('input-min');
+                        input.value = (parseInt(input.value)||0) + parseInt(btn.dataset.add);
+                    });
+                });
+                
+                document.getElementById('mode-std-btn').addEventListener('click', () => this.switchMode('standard'));
+                document.getElementById('mode-pomo-btn').addEventListener('click', () => this.switchMode('pomodoro'));
+                document.getElementById('mode-sw-btn').addEventListener('click', () => this.switchMode('stopwatch'));
+                document.getElementById('fullscreen-btn').addEventListener('click', () => {
+                    if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(console.warn);
+                    else document.exitFullscreen();
+                });
+            }
+
+            updatePomodoroBadge() {
+                const badge = document.getElementById('mode-badge');
+                badge.classList.remove('hidden');
+                if (this.state.isBreak) {
+                    badge.innerText = "BREAK TIME / 休息時間";
+                    badge.className = "fade-target mb-8 px-6 py-2 rounded-full text-white text-sm font-bold tracking-widest border border-green-400 bg-green-900/50 shadow-lg backdrop-blur-sm relative z-20";
+                } else {
+                    badge.innerText = "WORK TIME / 工作時間";
+                    badge.className = "fade-target mb-8 px-6 py-2 rounded-full text-white text-sm font-bold tracking-widest border border-red-400 bg-red-900/50 shadow-lg backdrop-blur-sm relative z-20";
+                }
+            }
+
+            handleFileUpload(e) {
+                const files = Array.from(e.target.files);
+                if (!files.length) return;
+                this.clearUploads(false);
+                this.yt.stop(); 
+
+                const vid = files.find(f => f.type.startsWith('video/'));
+                if (vid) {
+                    this.uploadedVideoUrl = URL.createObjectURL(vid);
+                    this.ui.setBackground(this.uploadedVideoUrl, true);
+                    document.getElementById('file-count').innerText = "影片: " + vid.name;
+                } else {
+                    this.uploadedImages = [];
+                    let loadedCount = 0;
+                    files.forEach(f => {
+                        const r = new FileReader();
+                        r.onload = (ev) => {
+                            this.uploadedImages.push(ev.target.result);
+                            loadedCount++;
+                            if (loadedCount === files.length) this.startSlideshow();
+                        };
+                        r.readAsDataURL(f);
+                    });
+                    document.getElementById('file-count').innerText = `圖片: ${files.length} 張`;
+                }
+            }
+
+            handleAudioUpload(e, type) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const url = URL.createObjectURL(file);
+                if (type === 'bgm') {
+                    this.customBgmUrl = url;
+                    if(document.getElementById('input-bgm-type').value === 'custom') this.audio.playBGM('custom', url);
+                } else this.customAlarmUrl = url;
+            }
+
+            startSlideshow() {
+                if (this.bgInterval) clearInterval(this.bgInterval);
+                if (this.uploadedImages.length === 0) return;
+                this.ui.setBackground(this.uploadedImages[0]);
+                if (this.uploadedImages.length > 1) {
+                    let idx = 0;
+                    this.bgInterval = setInterval(() => {
+                        idx = (idx + 1) % this.uploadedImages.length;
+                        this.ui.setBackground(this.uploadedImages[idx]);
+                    }, 10000); 
+                }
+            }
+
+            clearUploads(resetUI = true) {
+                if (this.uploadedVideoUrl) URL.revokeObjectURL(this.uploadedVideoUrl);
+                this.uploadedVideoUrl = null;
+                this.uploadedImages = [];
+                if (this.bgInterval) clearInterval(this.bgInterval);
+                if (resetUI) {
+                    document.getElementById('input-images').value = "";
+                    document.getElementById('file-count').innerText = "內建背景";
+                    this.yt.stop();
+                    this.updateBackgroundByTheme(document.getElementById('input-theme').value);
+                }
+            }
+
+            updateBackgroundByTheme(theme) {
+                const url = themeBackgrounds[theme] || themeBackgrounds['default'];
+                this.ui.setBackground(url);
+            }
+
+            exportSettings() {
+                const config = {
+                    version: "19.0",
+                    theme: document.getElementById('input-theme').value,
+                    color: document.getElementById('input-color').value,
+                    title: document.getElementById('input-title').value,
+                    min: document.getElementById('input-min').value,
+                    sec: document.getElementById('input-sec').value,
+                    bgmType: document.getElementById('input-bgm-type').value,
+                    audioType: document.getElementById('input-audio-type').value,
+                    volBgm: document.getElementById('input-vol-bgm').value,
+                    volAlarm: document.getElementById('input-vol-alarm').value,
+                    allowOvertime: document.getElementById('check-overtime').checked,
+                    enableTTS: document.getElementById('check-tts').checked,
+                    pomoWork: document.getElementById('input-pomo-work').value,
+                    pomoBreak: document.getElementById('input-pomo-break').value,
+                    youtubeUrl: document.getElementById('input-youtube').value,
+                    uiOpacity: document.getElementById('input-ui-opacity').value,
+                    autoFade: document.getElementById('check-auto-fade').checked,
+                    autoHistory: document.getElementById('check-auto-history').checked // v19.0 Save auto history pref
+                };
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "countdown_config.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            }
+
+            importSettings(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const c = JSON.parse(evt.target.result);
+                        this.applyImportedSettings(c);
+                        alert("設定已匯入");
+                    } catch (err) { alert("匯入失敗: " + err); }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+            }
+
+            applyImportedSettings(c) {
+                if(c.theme) { document.getElementById('input-theme').value = c.theme; this.ui.applyTheme(c.theme); this.updateBackgroundByTheme(c.theme); }
+                if(c.color) { document.getElementById('input-color').value = c.color; document.documentElement.style.setProperty('--text-primary', c.color); document.documentElement.style.setProperty('--border-color', c.color); document.documentElement.style.setProperty('--shadow-glow', `0 0 10px ${c.color}`); document.documentElement.style.setProperty('--ring-color', c.color); }
+                if(c.title) document.getElementById('input-title').value = c.title;
+                if(c.min) document.getElementById('input-min').value = c.min;
+                if(c.sec) document.getElementById('input-sec').value = c.sec;
+                if(c.bgmType) document.getElementById('input-bgm-type').value = c.bgmType;
+                if(c.audioType) document.getElementById('input-audio-type').value = c.audioType;
+                if(c.volBgm) { document.getElementById('input-vol-bgm').value = c.volBgm; this.audio.setVolume('bgm', c.volBgm); this.yt.setVolume(c.volBgm); document.getElementById('vol-bgm-val').innerText = c.volBgm + '%'; }
+                if(c.volAlarm) { document.getElementById('input-vol-alarm').value = c.volAlarm; this.audio.setVolume('alarm', c.volAlarm); document.getElementById('vol-alarm-val').innerText = c.volAlarm + '%'; }
+                if(c.allowOvertime !== undefined) document.getElementById('check-overtime').checked = c.allowOvertime;
+                if(c.enableTTS !== undefined) document.getElementById('check-tts').checked = c.enableTTS;
+                if(c.pomoWork) document.getElementById('input-pomo-work').value = c.pomoWork;
+                if(c.pomoBreak) document.getElementById('input-pomo-break').value = c.pomoBreak;
+                if(c.youtubeUrl) { document.getElementById('input-youtube').value = c.youtubeUrl; this.yt.loadVideo(c.youtubeUrl); }
+                if(c.uiOpacity !== undefined) {
+                    document.getElementById('input-ui-opacity').value = c.uiOpacity;
+                    document.documentElement.style.setProperty('--manual-opacity', c.uiOpacity / 100);
+                    document.getElementById('val-ui-opacity').innerText = c.uiOpacity + '%';
+                }
+                if(c.autoFade !== undefined) {
+                    document.getElementById('check-auto-fade').checked = c.autoFade;
+                    this.autoFadeEnabled = c.autoFade;
+                }
+                if(c.autoHistory !== undefined) {
+                    document.getElementById('check-auto-history').checked = c.autoHistory;
+                    this.state.config.autoHistory = c.autoHistory;
+                }
+                
+                document.getElementById('input-bgm-type').dispatchEvent(new Event('change'));
+                document.getElementById('input-audio-type').dispatchEvent(new Event('change'));
+            }
+
+            startTimer() {
+                const mode = this.state.mode;
+                let totalSec = 0;
+                
+                if (mode === 'standard') {
+                    totalSec = (parseInt(document.getElementById('input-min').value)||0)*60 + (parseInt(document.getElementById('input-sec').value)||0);
+                    this.state.config.allowOvertime = document.getElementById('check-overtime').checked;
+                    this.state.config.enableTTS = document.getElementById('check-tts').checked;
+                } else if (mode === 'pomodoro') {
+                    this.state.isBreak = false; 
+                    this.updatePomodoroBadge();
+                    totalSec = (parseInt(document.getElementById('input-pomo-work').value)||25)*60;
+                    this.state.config.allowOvertime = false;
+                    this.state.config.enableTTS = document.getElementById('check-tts').checked;
+                } else if (mode === 'stopwatch') {
+                    totalSec = 0; 
+                    this.state.config.allowOvertime = true;
+                    this.state.config.enableTTS = false;
+                }
+
+                if (mode !== 'stopwatch' && totalSec <= 0) return alert('時間太短');
+                
+                const title = document.getElementById('input-title').value || "SYSTEM_ACTIVE";
+                document.getElementById('event-title').innerHTML = `${title}<span class="blink">_</span>`;
+                
+                this.engine.start(totalSec);
+            }
+
+            togglePause() {
+                const btn = document.getElementById('pause-btn');
+                if (this.state.status === 'running' || this.state.status === 'overtime') {
+                    this.engine.pause();
+                    btn.innerHTML = `<span>▶</span> 繼續`;
+                    btn.classList.add('bg-green-600/50');
+                    // v19.0 Log
+                    this.state.addLog('PAUSE', {});
+                } else if (this.state.status === 'paused') {
+                    this.engine.resume();
+                    btn.innerHTML = `<span>❚❚</span> 暫停`;
+                    btn.classList.remove('bg-green-600/50');
+                    // v19.0 Log
+                    this.state.addLog('RESUME', {});
+                }
+            }
+
+            reset() { 
+                // v19.0: Log and Auto-download before reload
+                this.state.addLog('RESET', {});
+                this.downloadHistory();
+                
+                // Allow a tiny delay for download to initiate before refreshing
+                setTimeout(() => {
+                    window.location.reload(); 
+                }, 300);
+            }
+
+            switchMode(mode) {
+                this.state.mode = mode;
+                const stdDiv = document.getElementById('standard-time-inputs');
+                const pomoDiv = document.getElementById('pomodoro-time-inputs');
+                const swIntro = document.getElementById('stopwatch-intro');
+                
+                const advGroup = document.getElementById('advanced-settings-group');
+                
+                const btnStd = document.getElementById('mode-std-btn');
+                const btnPomo = document.getElementById('mode-pomo-btn');
+                const btnSw = document.getElementById('mode-sw-btn');
+                const badge = document.getElementById('mode-badge');
+
+                [btnStd, btnPomo, btnSw].forEach(btn => {
+                    btn.className = "flex-1 py-2 text-sm font-bold rounded-md text-gray-500 hover:text-white transition-all";
+                });
+
+                stdDiv.classList.add('hidden');
+                pomoDiv.classList.add('hidden');
+                swIntro.classList.add('hidden');
+                badge.classList.add('hidden');
+                
+                if (mode === 'standard') {
+                    advGroup.classList.remove('hidden');
+                } else {
+                    advGroup.classList.add('hidden');
+                }
+
+                if (mode === 'pomodoro') {
+                    pomoDiv.classList.remove('hidden');
+                    btnPomo.className = "flex-1 py-2 text-sm font-bold rounded-md bg-white/10 text-white shadow-sm transition-all";
+                    badge.innerText = "WORK TIME";
+                    badge.classList.remove('hidden');
+                } else if (mode === 'stopwatch') {
+                    swIntro.classList.remove('hidden');
+                    btnSw.className = "flex-1 py-2 text-sm font-bold rounded-md bg-white/10 text-white shadow-sm transition-all";
+                    badge.innerText = "STOPWATCH / 正計時";
+                    badge.className = "fade-target mb-8 px-6 py-2 rounded-full text-white text-sm font-bold tracking-widest border border-blue-400 bg-blue-900/50 shadow-lg backdrop-blur-sm relative z-20";
+                    badge.classList.remove('hidden');
+                } else {
+                    stdDiv.classList.remove('hidden');
+                    btnStd.className = "flex-1 py-2 text-sm font-bold rounded-md bg-white/10 text-white shadow-sm transition-all";
+                }
+            }
+
+            initBackgroundParticles() {
+                const canvas = document.getElementById('particle-canvas');
+                const ctx = canvas.getContext('2d');
+                let particles = [];
+                const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+                window.addEventListener('resize', resize); resize();
+                for(let i=0; i<50; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: Math.random()-0.5, vy: Math.random()-0.5, size: Math.random()*2 });
+                const loop = () => {
+                    ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                    particles.forEach(p => {
+                        p.x+=p.vx; p.y+=p.vy;
+                        if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0; if(p.y<0)p.y=canvas.height; if(p.y>canvas.height)p.y=0;
+                        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+                    });
+                    requestAnimationFrame(loop);
+                };
+                loop();
+            }
+        }
+
+        window.onload = () => {
+            const app = new App();
+        };
+    </script>
+</body>
+</html>
